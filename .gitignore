@@ -1,0 +1,31 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+
+# Node (only if you add tooling later)
+node_modules/
+npm-debug.log*
+
+# Build output / archives
+dist/
+*.zip
+
+# Local env files
+.env
+.env.*
+
+# Do NOT commit APKs here; upload them to GitHub Releases instead
+*.apk
+*.aab

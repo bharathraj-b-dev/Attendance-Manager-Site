@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AttendanceManager — Attendance tracker for college students (Android)</title>
+<meta name="description" content="Track attendance per subject, record Attend / Bunk / OD, and check the math before you skip. An Android app for college students.">
+<link rel="icon" href="assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbfaf8;--bg2:#f3f2ef;--ink:#1c1d22;--mute:#5d606b;--line:#e4e2dd;--acc:#4338ca;--acc-s:#eceafc;--ok:#0f7a55;--bad:#c2410c;--od:#2f5fd0;--r:14px}
+@media(prefers-color-scheme:dark){:root:not([data-x]){}}
+*{box-sizing:border-box;margin:0}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:76px}
+body{font:400 1.02rem/1.65 Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);overflow-x:clip;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:6px}
+.w{width:min(1120px,100% - 40px);margin:auto}
+h1,h2,h3{line-height:1.12;letter-spacing:-.025em;font-weight:700}
+h1{font-size:clamp(2.2rem,6vw,3.9rem);font-weight:800}
+h2{font-size:clamp(1.6rem,3.6vw,2.4rem)}
+h3{font-size:1.15rem;letter-spacing:-.01em}
+p{color:var(--mute);max-width:56ch}
+section{padding:clamp(56px,9vw,112px) 0}
+/* nav */
+header{position:sticky;top:0;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+header.s{background:rgba(251,250,248,.92);backdrop-filter:blur(10px);border-color:var(--line)}
+nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;gap:10px;align-items:center;font-weight:800;text-decoration:none;letter-spacing:-.02em}
+.brand img{width:30px;height:30px;border-radius:8px}
+.links{display:flex;gap:26px;align-items:center}
+.links a{text-decoration:none;font-size:.92rem;font-weight:600;color:var(--mute);position:relative;transition:color .2s}
+.links a:not(.btn)::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.links a:hover{color:var(--ink)}.links a:not(.btn):hover::after{transform:scaleX(1)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;font-weight:700;font-size:.95rem;text-decoration:none;border:1px solid var(--ink);background:var(--ink);color:#fff!important;cursor:pointer;transition:transform .15s,background .2s,box-shadow .2s}
+.btn:hover{background:#000;box-shadow:0 6px 18px -8px rgba(0,0,0,.5)}.btn:active{transform:scale(.97)}
+.btn .ar{transition:transform .2s}.btn:hover .ar{transform:translateX(4px)}
+.btn.g{background:transparent;color:var(--ink)!important;border-color:var(--line)}.btn.g:hover{background:var(--bg2);box-shadow:none}
+.btn.sm{padding:9px 16px}
+.burger{display:none;background:none;border:0;width:44px;height:44px;cursor:pointer;position:relative}
+.burger i{position:absolute;left:11px;right:11px;height:2px;background:var(--ink);transition:transform .25s,opacity .2s}
+.burger i:nth-child(1){top:16px}.burger i:nth-child(2){top:21px}.burger i:nth-child(3){top:26px}
+.burger[aria-expanded=true] i:nth-child(1){transform:translateY(5px) rotate(45deg)}
+.burger[aria-expanded=true] i:nth-child(2){opacity:0}
+.burger[aria-expanded=true] i:nth-child(3){transform:translateY(-5px) rotate(-45deg)}
+@media(max-width:820px){.burger{display:block}
+.links{position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 20px 20px;clip-path:inset(0 0 100% 0);opacity:0;visibility:hidden;transition:clip-path .3s,opacity .25s,visibility .3s}
+.links.o{clip-path:inset(0);opacity:1;visibility:visible}
+.links a:not(.btn){padding:14px 0;border-bottom:1px solid var(--line);font-size:1.05rem}.links a::after{display:none}
+.links .btn{justify-content:center;margin-top:16px}}
+/* hero */
+.hero{padding-top:clamp(32px,6vw,72px);padding-bottom:0}
+.hg{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero p.lead{font-size:1.15rem;margin:22px 0 30px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.note{margin-top:14px;font-size:.85rem;color:var(--mute)}
+.phone{width:min(300px,100%);margin:0 auto;border-radius:34px;padding:9px;background:#14161f;box-shadow:0 40px 70px -30px rgba(40,36,100,.5),0 0 0 1px rgba(0,0,0,.08)}
+.phone img{border-radius:26px;width:100%;height:auto;aspect-ratio:1080/2412;object-fit:cover;object-position:top;background:#14161f}
+.hero .phone{transform:rotate(2deg);animation:rise .9s cubic-bezier(.2,.7,.2,1) both .15s}
+@keyframes rise{from{opacity:0;transform:translateY(28px) rotate(2deg)}}
+.hero .cp>*{animation:rise2 .7s cubic-bezier(.2,.7,.2,1) both}
+.hero .cp>*:nth-child(2){animation-delay:.08s}.hero .cp>*:nth-child(3){animation-delay:.16s}.hero .cp>*:nth-child(4){animation-delay:.22s}
+@keyframes rise2{from{opacity:0;transform:translateY(14px)}}
+@media(max-width:860px){.hg{grid-template-columns:1fr;gap:40px}.hero .phone{width:min(260px,100%)}}
+/* strip */
+.strip{margin-top:clamp(48px,8vw,88px);border-block:1px solid var(--line);padding:18px 0}
+.strip ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px 36px;justify-content:space-between;font-weight:600;font-size:.92rem}
+.strip li{display:flex;gap:9px;align-items:center}.strip li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--acc)}
+/* features */
+.fh{max-width:640px;margin-bottom:56px}.fh h2+p{margin-top:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding:44px 0;border-top:1px solid var(--line)}
+.row.rev .t{order:2}
+.row p{margin-top:12px}
+.row .t h3{font-size:1.5rem}
+.vis{display:flex;justify-content:center}
+.vis .phone{width:240px}
+.vis.bare{justify-content:flex-start}
+.seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px;margin-top:20px}
+.seg button{font:600 .9rem Manrope;border:0;background:none;padding:9px 16px;border-radius:9px;cursor:pointer;color:var(--mute);transition:background .2s,color .2s}
+.seg button[aria-selected=true]{background:#fff;color:var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg+p{min-height:3.4em;font-size:.95rem}
+.ab{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 4px}
+.ab button{font:700 .95rem Manrope;border:0;padding:12px 22px;border-radius:10px;color:#fff;cursor:pointer;transition:transform .15s,box-shadow .2s,opacity .2s;opacity:.92}
+.ab button:hover{transform:translateY(-2px);box-shadow:0 8px 16px -8px rgba(0,0,0,.4);opacity:1}.ab button:active{transform:scale(.96)}
+.a{background:var(--ok)}.b{background:var(--bad)}.o{background:var(--od)}
+.ab-out{font-size:.95rem;min-height:1.6em;color:var(--ink);font-weight:600}
+.mini{display:grid;grid-template-columns:repeat(3,auto);gap:8px;justify-content:start;margin-top:22px}
+.mini span{display:grid;place-items:center;font-size:.8rem;font-weight:600;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;transition:transform .2s}
+.mini span:hover{transform:translateY(-2px)}
+@media(max-width:820px){.row{grid-template-columns:1fr;gap:28px;padding:36px 0}.row.rev .t{order:0}.vis,.vis.bare{justify-content:center}}
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;counter-reset:s}
+.steps div{border-top:2px solid var(--ink);padding-top:18px;counter-increment:s}
+.steps div::before{content:"0" counter(s);font-weight:800;color:var(--acc);display:block;margin-bottom:10px}
+.steps p{margin-top:8px;font-size:.96rem}
+@media(max-width:760px){.steps{grid-template-columns:1fr;gap:28px}}
+/* gallery */
+.gal{background:var(--bg2)}
+.gl{display:grid;grid-template-columns:repeat(6,1fr);gap:20px;align-items:end;margin-top:48px}
+.gl figure{grid-column:span 2;cursor:zoom-in;transition:transform .3s}
+.gl figure:nth-child(2),.gl figure:nth-child(5){transform:translateY(-28px)}
+.gl figure:hover{transform:translateY(-8px) scale(1.015)!important}
+.gl .phone{width:100%;padding:7px;border-radius:28px}.gl .phone img{border-radius:22px}
+.gl figcaption{font-size:.88rem;font-weight:600;text-align:center;margin-top:12px}
+.ph{aspect-ratio:1080/2412;border-radius:22px;background:repeating-linear-gradient(45deg,#2a2c38,#2a2c38 10px,#30323f 10px,#30323f 20px);color:#aaa;display:grid;place-items:center;font-size:.8rem;padding:10px;text-align:center}
+@media(max-width:820px){.gl{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;padding:8px 20px 20px;margin:36px -20px 0}
+.gl figure{flex:0 0 62%;scroll-snap-align:center}.gl figure:nth-child(n){transform:none}}
+dialog{border:0;background:transparent;max-width:100vw;max-height:100vh;padding:20px;margin:auto}
+dialog::backdrop{background:rgba(15,15,22,.82)}
+dialog img{max-height:88vh;width:auto;border-radius:20px}
+dialog button{position:fixed;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:1.3rem;cursor:pointer}
+/* download */
+.dl{background:var(--ink);color:#fff;text-align:center}
+.dl p{color:#b9bbc6;margin:14px auto 28px}
+.dl .btn{background:#fff;color:var(--ink)!important;border-color:#fff}.dl .btn:hover{background:#eceafc}
+.dl .btn.g{background:transparent;color:#fff!important;border-color:#555}.dl .btn.g:hover{background:#2a2c35}
+.dl .cta{justify-content:center}
+.ins{max-width:560px;margin:56px auto 0;text-align:left;border-top:1px solid #34363f;padding-top:28px}
+.ins h3{margin-bottom:12px}.ins ol{padding-left:20px;color:#b9bbc6;font-size:.95rem}.ins li{margin:5px 0}
+/* changelog + faq */
+.rel{border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;background:#fff;max-width:640px}
+.rel b{font-size:1.1rem}.rel span{font-size:.8rem;font-weight:700;color:var(--acc);background:var(--acc-s);padding:3px 10px;border-radius:99px;margin-left:8px}
+.rel ul{margin:12px 0 0 18px;color:var(--mute);font-size:.95rem}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;padding:20px 0;font-weight:700;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:1.4rem;font-weight:500;transition:transform .25s;color:var(--acc)}
+details[open] summary::after{transform:rotate(45deg)}
+details .ans{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s}
+details[open] .ans{grid-template-rows:1fr}
+.ans>div{overflow:hidden}.ans p{padding-bottom:20px}
+.faq{max-width:760px}
+footer{padding:44px 0;border-top:1px solid var(--line);font-size:.9rem}
+.fg{display:flex;flex-wrap:wrap;gap:20px 40px;justify-content:space-between;align-items:center}
+footer nav{height:auto;gap:22px;flex-wrap:wrap;justify-content:flex-start}
+footer nav a{color:var(--mute);text-decoration:none}footer nav a:hover{color:var(--ink)}
+.disc{font-size:.82rem;max-width:70ch;margin-top:22px}
+/* reveal */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.rv.l{transform:translateX(-22px)}.rv.r{transform:translateX(22px)}.rv.z{transform:scale(.96)}
+.rv.in{opacity:1;transform:none}
+.gl figure.rv.in:nth-child(2),.gl figure.rv.in:nth-child(5){transform:translateY(-28px)}
+@media(max-width:820px){.gl figure.rv.in:nth-child(n){transform:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header id="hd"><div class="w"><nav aria-label="Main">
+<a class="brand" href="#top"><img src="assets/icon.png" alt="" width="30" height="30">AttendanceManager</a>
+<button class="burger" id="bg" aria-expanded="false" aria-controls="lk" aria-label="Menu"><i></i><i></i><i></i></button>
+<div class="links" id="lk">
+<a href="#features">Features</a><a href="#how">How it works</a><a href="#screenshots">Screenshots</a><a href="#faq">FAQ</a><a data-href="repo" href="#">GitHub</a>
+<a class="btn sm" data-href="apk" href="#">Download APK <span class="ar">→</span></a></div>
+</nav></div></header>
+
+<main id="top">
+<section class="hero"><div class="w hg">
+<div class="cp">
+<h1>Know when to attend. Know when you can skip.</h1>
+<p class="lead">AttendanceManager keeps your subjects, classes and attendance target in one place — so you always know where you stand.</p>
+<div class="cta"><a class="btn" data-href="apk" href="#">Download for Android <span class="ar">→</span></a><a class="btn g" data-href="repo" href="#">View on GitHub</a></div>
+<p class="note">Android APK · Free</p>
+</div>
+<div><div class="phone"><img src="assets/screenshots/home.jpg" alt="AttendanceManager home screen showing 77.19% overall attendance and the next class with Attend, Bunk and OD buttons" width="320" height="711"></div></div>
+</div>
+<div class="w"><div class="strip"><ul><li>Local-first</li><li>No account required</li><li>Configurable attendance target</li><li>Built for Android</li></ul></div></div>
+</section>
+
+<section id="features"><div class="w">
+<div class="fh rv"><h2>Everything you need to stay on top of attendance.</h2><p>Six things the app does, and nothing it doesn't.</p></div>
+
+<div class="row"><div class="t rv l"><h3>Attendance at a glance</h3><p>Your overall percentage sits at the top of the home screen, with present, absent and marked counts. Every subject gets its own status — safe, warning or critical — and the next class is always one tap away.</p>
+<div class="mini"><span>Overall %</span><span>Per subject</span><span>Next class</span></div></div>
+<div class="vis rv r"><div class="phone"><img loading="lazy" src="assets/screenshots/subjects.jpg" alt="Subjects list with attendance percentage and safe-to-miss message for each subject" width="320" height="711"></div></div></div>
+
+<div class="row rev"><div class="t rv r"><h3>Theory &amp; Practical, kept separate</h3><p>A subject can hold both lectures and labs. Switch views to see each on its own.</p>
+<div class="seg" role="tablist" aria-label="Subject views"><button role="tab" aria-selected="true" data-t="Overall combines Theory and Practical sessions into one percentage.">Overall</button><button role="tab" aria-selected="false" data-t="Theory shows lecture sessions only.">Theory</button><button role="tab" aria-selected="false" data-t="Practical shows lab and practical sessions only.">Practical</button></div>
+<p id="segp">Overall combines Theory and Practical sessions into one percentage.</p></div>
+<div class="vis rv l"><div class="phone"><img loading="lazy" src="assets/screenshots/subject-details.jpg" alt="Subject details screen with Overall, Theory and Practical tabs and Marked Records" width="320" height="711"></div></div></div>
+
+<div class="row"><div class="t rv l"><h3>When a class is over, record what actually happened.</h3><p>Mark any class as Attend, Bunk or OD (On Duty). Classes that have passed without an update show up as pending, so nothing slips through.</p>
+<div class="ab"><button class="a" data-m="Attended — counts toward your attendance.">Attend</button><button class="b" data-m="Bunked — counts as absent.">Bunk</button><button class="o" data-m="OD — marked as On Duty.">OD</button></div>
+<p class="ab-out" id="abo" aria-live="polite">Try them.</p></div>
+<div class="vis bare rv r"><div class="phone"><img loading="lazy" src="assets/screenshots/home.jpg" alt="Next class card asking what happened, with Attend, Bunk and On Duty buttons" width="320" height="711" style="object-position:top"></div></div></div>
+
+<div class="row rev" id="calc"><div class="t rv r"><h3>Before you skip that class, check the math.</h3><p>The What-If Calculator works out how many classes you can miss and still stay above your target, or how many you need to attend to reach it. It's plain arithmetic on your numbers — no guesswork.</p></div>
+<div class="vis rv l"><div class="phone"><img loading="lazy" src="assets/screenshots/calculator.jpg" alt="What-If Calculator projecting 83.54% attendance after attending 3 classes" width="320" height="711"></div></div></div>
+
+<div class="row"><div class="t rv l"><h3>Class reminders</h3><p>Get a notification before a class, and mark Attend, Bunk or OD straight from it. Reminders are local and can be switched off in Settings, along with your target (default 75%) and theme.</p></div>
+<div class="vis rv r"><div class="phone"><img loading="lazy" src="assets/screenshots/settings.jpg" alt="Settings with attendance target slider and class reminders toggle" width="320" height="711"></div></div></div>
+
+<div class="row rev" id="digi"><div class="t rv r"><h3>Already have attendance in DigiCampus?</h3><p>Import it instead of starting from zero. Sign in to DigiCampus inside the app, open your attendance records, and tap Import. Optional — you can also just track manually.</p>
+<p class="disc">AttendanceManager is an independent project and is not affiliated with or endorsed by DigiCampus or the institution providing it.</p></div>
+<div class="vis rv l"><div class="phone"><img loading="lazy" src="assets/screenshots/digicampus.jpg" alt="DigiCampus import screen with Import Attendance button" width="320" height="711"></div></div></div>
+</div></section>
+
+<section id="how" style="background:var(--bg2)"><div class="w">
+<h2 class="rv" style="margin-bottom:44px">Up and running in three steps.</h2>
+<div class="steps">
+<div class="rv"><h3>Import or add your attendance</h3><p>Bring it in from DigiCampus, or start fresh and add subjects yourself.</p></div>
+<div class="rv"><h3>Set your attendance target</h3><p>Pick the percentage you need. Every status and calculation follows it.</p></div>
+<div class="rv"><h3>Track each class</h3><p>Mark Attend, Bunk or OD, and check the calculator when you're unsure.</p></div>
+</div></div></section>
+
+<section id="screenshots" class="gal"><div class="w">
+<div class="fh rv" style="margin-bottom:0"><h2>See it in use.</h2><p>Tap any screen to enlarge.</p></div>
+<div class="gl" id="gl"></div></div></section>
+
+<section><div class="w" style="display:grid;grid-template-columns:1fr 1fr;gap:56px" id="pv">
+<div class="rv"><h2>Your attendance stays with you.</h2></div>
+<div class="rv"><p>AttendanceManager stores its attendance data on your Android device. There are no online accounts and no cloud sync. DigiCampus import, if you use it, loads DigiCampus pages in the app so you sign in there directly.</p></div></div></section>
+
+
+<section><div class="w">
+<h2 class="rv" style="margin-bottom:32px">Releases</h2>
+<div class="rel rv"><b>AttendanceManager <span data-v>v1.0</span></b><span>First stable release</span>
+<ul><li>Overall and per-subject attendance, with Theory and Practical views</li><li>Attend, Bunk and OD marking, with pending classes surfaced</li><li>What-If Calculator and configurable target</li><li>Class reminders and optional DigiCampus import</li></ul></div>
+<p style="margin-top:14px;font-size:.9rem">Older and newer versions are listed on <a data-href="rel" href="#">GitHub Releases</a>.</p>
+</div></section>
+
+<section id="faq" style="padding-top:0"><div class="w faq">
+<h2 style="margin-bottom:24px">Questions</h2>
+<details><summary>Is AttendanceManager free?</summary><div class="ans"><div><p>Yes. Download it from GitHub Releases.</p></div></div></details>
+<details><summary>Is my attendance stored online?</summary><div class="ans"><div><p>No. Attendance data is stored locally on your device. There are no accounts or cloud sync.</p></div></div></details>
+<details><summary>Do I need a DigiCampus account?</summary><div class="ans"><div><p>Only if you want to import from DigiCampus. You can add and track attendance manually without one.</p></div></div></details>
+<details><summary>Is AttendanceManager officially affiliated with DigiCampus?</summary><div class="ans"><div><p>No. It's an independent project, not affiliated with or endorsed by DigiCampus or your institution.</p></div></div></details>
+<details><summary>How do I update AttendanceManager?</summary><div class="ans"><div><p>Download the newer APK from GitHub Releases and install it over the existing app. Don't uninstall first.</p></div></div></details>
+<details><summary>Will updating delete my attendance?</summary><div class="ans"><div><p>No, updating over the existing app keeps your local data. Uninstalling may remove it, so avoid that during normal updates.</p></div></div></details>
+<details><summary>Where can I report a bug?</summary><div class="ans"><div><p>Open an issue on the <a data-href="issues" href="#">GitHub issues page</a>.</p></div></div></details>
+</div></section>
+<section class="dl" id="download"><div class="w rv z">
+<h2>Ready to keep attendance under control?</h2>
+<p>Always downloads the newest release · Android APK</p>
+<div class="cta"><a class="btn" data-href="apk" href="#">Download APK <span class="ar">→</span></a><a class="btn g" data-href="rel" href="#">View All Releases</a></div>
+<div class="ins"><h3>How to install</h3><ol><li>Download the APK.</li><li>Open the downloaded file.</li><li>Android may ask you to allow installation from that source.</li><li>Allow it only if you trust the AttendanceManager release you downloaded.</li><li>Install the app.</li></ol></div>
+</div></section>
+</main>
+
+<footer><div class="w"><div class="fg">
+<div><a class="brand" href="#top"><img src="assets/icon.png" alt="" width="30" height="30">AttendanceManager</a><p style="margin-top:8px;font-size:.88rem">Built for students who check their attendance a little too often.</p></div>
+<nav aria-label="Footer"><a data-href="repo" href="#">GitHub</a><a data-href="rel" href="#">Releases</a><a data-href="issues" href="#">Report a bug</a></nav></div>
+<p class="disc">AttendanceManager is an independent project and is not affiliated with or endorsed by DigiCampus or the institution providing it.</p></div></footer>
+
+<dialog id="lb" aria-label="Screenshot"><button aria-label="Close">×</button><img alt=""></dialog>
+
+<script>
+/* ===== EDIT HERE: all links and screenshots live in this one block ===== */
+const CONFIG={
+  // 1) The ONLY value you must edit: your repository URL (placeholder until you set it).
+  GITHUB_REPOSITORY_URL:"https://github.com/bharathraj-b-dev/Attendance-Manager",
+  // 2) Version label used only for the static changelog entry. The site does NOT claim to know the latest version.
+  VERSION:"v1.0",
+  SCREENSHOTS:[ // replace the files in assets/screenshots/ or edit this list
+    {file:"home.jpg",label:"Home"},{file:"subjects.jpg",label:"Subjects"},{file:"subject-details.jpg",label:"Subject details"},
+    {file:"calculator.jpg",label:"What-If Calculator"},{file:"digicampus.jpg",label:"DigiCampus import"},{file:"settings.jpg",label:"Settings"}]
+};
+// Derived URLs (change them individually here only if the repository location changes in an unusual way).
+// Every release must upload its APK named exactly AttendanceManager.apk so this link always serves the newest release.
+const APK_DOWNLOAD_URL=CONFIG.GITHUB_REPOSITORY_URL+"/releases/latest/download/AttendanceManager.apk";
+const GITHUB_RELEASES_URL=CONFIG.GITHUB_REPOSITORY_URL+"/releases";
+const ISSUES_URL=CONFIG.GITHUB_REPOSITORY_URL+"/issues";
+/* ======================================================================= */
+const U={repo:CONFIG.GITHUB_REPOSITORY_URL,rel:GITHUB_RELEASES_URL,apk:APK_DOWNLOAD_URL,issues:ISSUES_URL};
+document.querySelectorAll("[data-href]").forEach(a=>{a.href=U[a.dataset.href];
+  if(a.dataset.href==="apk"){a.setAttribute("download","AttendanceManager.apk");a.removeAttribute("target")}else a.rel="noopener"});
+document.querySelectorAll("[data-v]").forEach(e=>e.textContent=CONFIG.VERSION);
+const hd=document.getElementById("hd");
+addEventListener("scroll",()=>hd.classList.toggle("s",scrollY>8),{passive:true});
+const bg=document.getElementById("bg"),lk=document.getElementById("lk");
+const tg=o=>{lk.classList.toggle("o",o);bg.setAttribute("aria-expanded",o)};
+bg.onclick=()=>tg(!lk.classList.contains("o"));
+lk.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>tg(false)));
+addEventListener("keydown",e=>{if(e.key==="Escape")tg(false)});
+/* tabs + attend demo */
+const sp=document.getElementById("segp");
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-selected",x===b));sp.textContent=b.dataset.t});
+document.querySelectorAll(".ab button").forEach(b=>b.onclick=()=>document.getElementById("abo").textContent=b.dataset.m);
+/* gallery */
+const gl=document.getElementById("gl"),lb=document.getElementById("lb"),li=lb.querySelector("img");
+CONFIG.SCREENSHOTS.forEach(s=>{
+  const f=document.createElement("figure");f.className="rv z";f.tabIndex=0;f.setAttribute("role","button");f.setAttribute("aria-label","Enlarge "+s.label);
+  const src="assets/screenshots/"+s.file;
+  f.innerHTML=`<div class="phone"><img loading="lazy" src="${src}" alt="${s.label} screen of AttendanceManager" width="320" height="711"></div><figcaption>${s.label}</figcaption>`;
+  f.querySelector("img").onerror=function(){this.replaceWith(Object.assign(document.createElement("div"),{className:"ph",textContent:"Add assets/screenshots/"+s.file}))};
+  const open=()=>{const i=f.querySelector("img");if(!i)return;li.src=i.src;li.alt=i.alt;lb.showModal()};
+  f.onclick=open;f.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}};
+  gl.appendChild(f)});
+lb.onclick=()=>lb.close();
+/* reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll(".rv").forEach(e=>io.observe(e));
+/* slight parallax on feature phones */
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches&&innerWidth>820){
+  const ps=[...document.querySelectorAll(".vis .phone")];let t=false;
+  addEventListener("scroll",()=>{if(t)return;t=true;requestAnimationFrame(()=>{ps.forEach(p=>{const r=p.getBoundingClientRect();p.style.translate="0 "+((r.top+r.height/2-innerHeight/2)*-.04)+"px"});t=false})},{passive:true})}
+if(innerWidth<=760)document.getElementById("pv").style.gridTemplateColumns="1fr";
+</script>
+</body>
+</html>
